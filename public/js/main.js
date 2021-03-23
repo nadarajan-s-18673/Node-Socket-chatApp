@@ -3,49 +3,51 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 
-const socket = io();
-
-
-// to fetch username from the from submission
+// Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
-    //for ignoring the prefix character
-    ignoreQueryPrefix: true
+  ignoreQueryPrefix: true
 });
 
-socket.emit('username', username);
+const socket = io();
 
-//console.log(username);
+// Join chatroom
+socket.emit('joinRoom', { username, room });
 
+
+// Message from server
 socket.on('message', message => {
-    console.log(message);
-    toDom(message);
+  console.log(message);
+  outputMessage(message);
 
-    //for scrolling
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-})
+  // Scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
 
+// Message submit
+chatForm.addEventListener('submit', e => {
+  e.preventDefault();
 
-chatForm.addEventListener('submit', (event) => {
-    event.preventDefault();
+  // Get message text
+  const msg = e.target.elements.msg.value;
 
-    const msg = event.target.elements.msg.value;
-    //console.log(msg);
-    //emiting chat message to server
-    socket.emit('chatMessage', msg);
+  // Emit message to server
+  socket.emit('chatMessage', msg);
 
-    event.target.elements.msg.value = '';
-    event.target.elements.msg.focus();
-
-
-})
+  // Clear input
+  e.target.elements.msg.value = '';
+  e.target.elements.msg.focus();
+});
 
 // Output message to DOM
-function toDom(message) {
-    const div = document.createElement('div');
-    div.classList.add('message');
-    div.innerHTML = `<p class="meta"> ${message.username}<span>${message.time}</span></p>
+function outputMessage(message) {
+  const div = document.createElement('div');
+  div.classList.add('message');
+  div.innerHTML = `<p class="meta">${message.username} <span>${message.time}</span></p>
   <p class="text">
     ${message.text}
   </p>`;
-    document.querySelector('.chat-messages').appendChild(div);
+  document.querySelector('.chat-messages').appendChild(div);
 }
+
+
+
